@@ -4,9 +4,17 @@ from StringIO import StringIO
 import gzip, json, random
 
 
-#f = open('cookie', 'r')
-mycookie =  ''
-#f.close()
+f = open('mycookie.data', 'r')
+mycookie = f.read()
+f.close()
+
+def getFilterList():
+    #不去管那些失效的AV号
+    f = open('FilterList.txt', 'r')
+    c = f.read()[:-1]
+    f.close()
+    return c.split(',')
+
 
 def reMatch(start, end, s):
     #正则表达用来找需要的数据
@@ -69,27 +77,28 @@ def HTMLinfo(av):
             return [av, title, mid, cid, startData]
     return 
 
-
 def mainThread(threadID = 0, START = 0, END = 1000):
     #获取视频信息的主线程
+    l = getFilterList()
     f = open('Accounting/' + str(threadID) + '.data', 'w')
     for av in xrange(START, END):
         if not av % 200:
             print time.ctime(), threadID, av - START
-        fullInfo = HTMLinfo(av)
-        if fullInfo:
-            detail = XMLinfo(fullInfo[3])
-            fullInfo += detail
-            sentence = ','.join(map(lambda x: str(x).replace(',', '，'), fullInfo))
-            #print sentence
-            #对应 AV、标题、Mid、cid、上传日期、点击、收藏、硬币、弹幕、一个未知id、类别id
-            f.write(sentence + '\n')
+        if av not in l:
+            fullInfo = HTMLinfo(av)
+            if fullInfo:
+                detail = XMLinfo(fullInfo[3])
+                fullInfo += detail
+                sentence = ','.join(map(lambda x: str(x).replace(',', '，'), fullInfo))
+                #print sentence
+                #对应 AV、标题、Mid、cid、上传日期、点击、收藏、硬币、弹幕、一个未知id、类别id
+                f.write(sentence + '\n')
     f.close()
     print 'Thread', threadID, 'finished.'
         
 def reduceFile(path, threadNum):
     #把多线程计算得到的文件合并成一个。
-    f = open('path' + '/' + 'result.csv', 'w')
+    f = open('path' + '/' + 'result.txt', 'w')
     for i in xrange(threadNum):
         fr = open('path' + '/' + str(i), 'r')
         c = fr.read()
@@ -125,15 +134,16 @@ def Userinfo(threadID = 0, START = 0, END = 1000):
             for i in query:
                 s += str(c['data'][i]) + ','
             s += str(c['data']['level_info']['current_exp'])+ ','
+            s += str(elec) + ','
             s += '|'.join(map(str, c['data']['attentions']))
-            # 姓名，mid，注册时间，粉丝数，关注数，积分，关注列表
+            # 姓名，mid，注册时间，粉丝数，关注数，积分，被充电人数, 关注列表
             f.write(s.encode('utf8') + '\n')
     f.close()
     
 
 if __name__ == '__main__':
-    task = 3
-    threadNum = 12
+    task = 2
+    threadNum = 32
     if task == 1:
         Userinfo(0, 3076797, 3076799)
         #mainThread()

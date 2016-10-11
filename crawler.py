@@ -132,8 +132,8 @@ def Userinfo(threadID = 0, START = 0, END = 1000):
     
 
 if __name__ == '__main__':
-    task = 2
-    threadNum = 16
+    task = 3
+    threadNum = 12
     if task == 1:
         Userinfo(0, 3076797, 3076799)
         #mainThread()
